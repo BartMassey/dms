@@ -56,6 +56,20 @@ impl Square {
     pub fn is_fit(&self, pos: usize, word: Word) -> bool {
         is_fit_word(self.0[pos], word.0)
     }
+
+    pub fn as_string(&self) -> String {
+        let mut result = String::with_capacity(35);
+
+        for i in 0..5 {
+            let row = self.get_pos(i);
+            result += &row.as_string();
+            if i < 4 {
+                result += "\n";
+            }
+        }
+
+        result
+    }
 }
 
 #[test]
@@ -96,4 +110,17 @@ fn test_coord_pos() {
             assert!(s.get_coord(i, j).is_none(), "{} {}", i, j);
         }
     }
+}
+
+#[test]
+fn test_as_string() {
+    let mut s = Square::default();
+    let wx = Word::from_str("abcde").unwrap();
+    s.set_pos(1, wx);
+    let wy = Word::from_str("udwxy").unwrap();
+    s.set_pos(8, wy);
+
+    let r = s.as_string();
+    let r0 = "...u.\nabcde\n...w.\n...x.\n...y.";
+    assert_eq!(&r, r0);
 }
