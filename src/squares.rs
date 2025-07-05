@@ -1,6 +1,6 @@
 use crate::words::Word;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Square([u32; 10]);
 
 impl Default for Square {
@@ -23,7 +23,7 @@ fn is_fit_word(target: u32, source: u32) -> bool {
 }
 
 impl Square {
-    pub fn get_coord(&self, pos: usize, offset: usize) -> Option<u8> {
+    fn get_coord(&self, pos: usize, offset: usize) -> Option<u8> {
         assert!(pos < 10 && offset < 5);
 
         let v = self.0[pos] >> (6 * (4 - offset));
@@ -31,6 +31,13 @@ impl Square {
             Some((v & 0x1f) as u8)
         } else {
             None
+        }
+    }
+
+    pub fn get_char(&self, pos: usize, offset: usize) -> char {
+        match self.get_coord(pos, offset) {
+            Some(v) => (v as u8 + b'a') as char,
+            None => '.',
         }
     }
 
@@ -70,6 +77,18 @@ impl Square {
 
         result
     }
+
+    pub fn is_full(&self) -> bool {
+        for pos in 0..5 {
+            for offset in 0..5 {
+                if self.get_coord(pos, offset).is_none() {
+                    return false;
+                }
+            }
+        }
+
+        true
+    }
 }
 
 #[test]
@@ -77,9 +96,9 @@ fn test_coord_pos() {
     let mut s = Square::default();
     let wx = Word::from_str("abcde").unwrap();
     s.set_pos(1, wx);
-    assert_eq!(s.get_coord(1, 1).unwrap(), 1);
-    assert!(s.get_coord(6, 0).is_none());
-    assert_eq!(s.get_coord(8, 1).unwrap(), 3);
+    assert_eq!(s.get_char(1, 1), 'b');
+    assert_eq!(s.get_char(6, 0), '.');
+    assert_eq!(s.get_char(8, 1), 'd');
 
     let wy = Word::from_str("udwxy").unwrap();
     assert!(s.is_fit(8, wy));
@@ -96,7 +115,7 @@ fn test_coord_pos() {
             if j == 3 {
                 continue;
             }
-            assert!(s.get_coord(i, j).is_none(), "{} {}", i, j);
+            assert_eq!(s.get_char(i, j), '.', "{} {}", i, j);
         }
     }
     for i in 5..10 {
@@ -107,7 +126,7 @@ fn test_coord_pos() {
             if j == 1 {
                 continue;
             }
-            assert!(s.get_coord(i, j).is_none(), "{} {}", i, j);
+            assert_eq!(s.get_char(i, j), '.', "{} {}", i, j);
         }
     }
 }
