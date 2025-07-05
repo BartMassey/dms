@@ -1,7 +1,10 @@
 #![allow(clippy::uninlined_format_args)]
 
 mod squares;
+mod words;
+
 use squares::*;
+use words::*;
 
 use std::io::{BufReader, BufRead};
 use std::fs::File;
