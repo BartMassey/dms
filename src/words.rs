@@ -17,6 +17,9 @@ impl Word {
 
         let mut result = 0u32;
         for (i, c) in word.chars().enumerate() {
+            if c == '.' {
+                continue;
+            }
             if !c.is_ascii_lowercase() {
                 bail!("invalid char error");
             }
@@ -30,9 +33,14 @@ impl Word {
         let mut i = 0;
         std::iter::from_fn(move || {
             if i < 5 {
-                let c = (self.0 >> (6 * (4 - i))) & 0x1f;
+                let bits = (self.0 >> (6 * (4 - i))) & 0x3f;
+                let c = if bits & 0x20 > 0 {
+                    ((bits & 0x1f) as u8 + b'a') as char
+                } else {
+                    '.'
+                };
                 i += 1;
-                Some((c as u8 + b'a') as char)
+                Some(c)
             } else {
                 None
             }
@@ -49,7 +57,12 @@ fn test_word() {
     let w = "abcde";
     let word = Word::from_str(w).unwrap();
     assert_eq!(word.0, 0b00_100000_100001_100010_100011_100100);
+    let s = word.as_string();
+    assert_eq!(w, &s);
 
+    let w = "abc.e";
+    let word = Word::from_str(w).unwrap();
+    assert_eq!(word.0, 0b00_100000_100001_100010_000000_100100);
     let s = word.as_string();
     assert_eq!(w, &s);
 }
