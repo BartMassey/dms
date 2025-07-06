@@ -12,6 +12,7 @@ use std::fs::File;
 use std::process::exit;
 
 use anyhow::Error;
+extern crate serde_json;
 
 type WordSet = HashSet<Word>;
 
@@ -39,7 +40,7 @@ fn cols_ok(s: &Square, words: &[Word], used: &WordSet) -> bool {
     true
 }
 
-fn find_first(s: &mut Square, words: &[Word], used: &mut WordSet) -> Option<Square> {
+fn find_all(s: &mut Square, words: &[Word], used: &mut WordSet, results: &mut Vec<Square>) {
     let mut p = 0;
     while p < 5 {
         if s.get_char(p, 0) == '.' {
@@ -48,7 +49,10 @@ fn find_first(s: &mut Square, words: &[Word], used: &mut WordSet) -> Option<Squa
         p += 1;
     }
     if p == 5 {
-        return Some(s.clone());
+        eprintln!("{}", s.as_string());
+        eprintln!();
+        results.push(s.clone());
+        return;
     }
     for &w in words {
         if used.contains(&w) {
@@ -57,18 +61,14 @@ fn find_first(s: &mut Square, words: &[Word], used: &mut WordSet) -> Option<Squa
         s.set_pos(p, w);
         used.insert(w);
         if cols_ok(s, words, used) {
-            if let Some(s) = find_first(s, words, used) {
-                return Some(s);
-            }
+            find_all(s, words, used, results);
         }
         used.remove(&w);
         s.clear_pos(p);
     }
-
-    None
 }
 
-fn run() -> Result<Option<Square>, Error> {
+fn run() -> Result<usize, Error> {
     let words = File::open("usa_5.txt")?;
     let words = BufReader::new(words)
         .lines()
@@ -77,7 +77,12 @@ fn run() -> Result<Option<Square>, Error> {
 
     let mut s = Square::default();
     let mut used = HashSet::with_capacity(25);
-    Ok(find_first(&mut s, &words, &mut used))
+    let mut results = Vec::new();
+    find_all(&mut s, &words, &mut used, &mut results);
+    
+    let save = File::create("squares.json")?;
+    serde_json::to_writer(save, &results)?;
+    Ok(results.len())
 }
 
 fn main() {
@@ -86,7 +91,9 @@ fn main() {
             eprintln!("dms: {}", e);
             exit(1);
         }
-        Ok(Some(s)) => println!("{}", s.as_string()),
-        Ok(None) => println!("no squares"),
+        Ok(nsquares) => {
+            println!("{} squares", nsquares);
+            
+        }
     }
 }

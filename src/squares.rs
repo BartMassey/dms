@@ -1,5 +1,7 @@
 use crate::words::Word;
 
+use serde::{self, ser::SerializeSeq};
+
 #[derive(Debug, Clone, Default)]
 pub struct Square([u32; 10]);
 
@@ -125,6 +127,19 @@ fn test_coord_pos() {
             }
             assert_eq!(s.get_char(i, j), '.', "{} {}", i, j);
         }
+    }
+}
+
+impl serde::Serialize for Square {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+       where S: serde::Serializer
+    {
+        let mut seq = serializer.serialize_seq(Some(5))?;
+        for pos in 0..5 {
+            let row = self.get_pos(pos).as_string();
+            seq.serialize_element(&row)?;
+        }
+        seq.end()
     }
 }
 
