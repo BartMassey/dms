@@ -15,32 +15,54 @@ use anyhow::Error;
 
 type WordSet = HashSet<Word>;
 
+// XXX Limited; only checks columns, assumes rows are ok.
+// XXX Buggy; allows fitting the same word to multiple columns.
+fn cols_ok(s: &Square, words: &[Word], used: &WordSet) -> bool {
+    let cross_fit = move |target: Word| {
+        for &w in words {
+            if used.contains(&w) {
+                continue;
+            }
+            if target.is_fit(w) {
+                return true;
+            }
+        }
+        false
+    };
+
+    for p in 5..10 {
+        let target = s.get_pos(p);
+        if !cross_fit(target) {
+            return false;
+        }
+    }
+    true
+}
+
 fn find_first(s: &mut Square, words: &[Word], used: &mut WordSet) -> Option<Square> {
-    if s.is_full() {
+    let mut p = 0;
+    while p < 5 {
+        if s.get_char(p, 0) == '.' {
+            break;
+        }
+        p += 1;
+    }
+    if p == 5 {
         return Some(s.clone());
     }
-
     for &w in words {
         if used.contains(&w) {
             continue;
         }
-        let range = if s.get_char(0, 0) == '.' {
-            0..1
-        } else {
-            1..10
-        };
-        for p in range {
-            if s.is_fit(p, w) {
-                let undo = s.get_pos(p);
-                s.set_pos(p, w);
-                used.insert(w);
-                if let Some(s) = find_first(s, words, used) {
-                    return Some(s);
-                }
-                used.remove(&w);
-                s.set_pos(p, undo);
+        s.set_pos(p, w);
+        used.insert(w);
+        if cols_ok(s, words, used) {
+            if let Some(s) = find_first(s, words, used) {
+                return Some(s);
             }
         }
+        used.remove(&w);
+        s.clear_pos(p);
     }
 
     None
