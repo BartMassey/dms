@@ -1,13 +1,7 @@
 use anyhow::{bail, Error};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub struct Word(pub u32);
-
-impl Default for Word {
-    fn default() -> Self {
-        Self(0)
-    }
-}
 
 impl Word {
     pub fn from_str(word: &str) -> Result<Self, Error> {
@@ -29,26 +23,40 @@ impl Word {
         Ok(Self(result))
     }
 
-    pub fn chars(self) -> impl Iterator<Item = char> {
+    fn bits(self) -> impl Iterator<Item = u8> {
         let mut i = 0;
         std::iter::from_fn(move || {
             if i < 5 {
                 let bits = (self.0 >> (6 * (4 - i))) & 0x3f;
-                let c = if bits & 0x20 > 0 {
-                    ((bits & 0x1f) as u8 + b'a') as char
-                } else {
-                    '.'
-                };
                 i += 1;
-                Some(c)
+                Some(bits as u8)
             } else {
                 None
             }
         })
     }
 
+    pub fn chars(self) -> impl Iterator<Item = char> {
+        self.bits().map(|bits| {
+            if bits & 0x20 > 0 {
+                ((bits & 0x1f) + b'a') as char
+            } else {
+                '.'
+            }
+        })
+    }
+
     pub fn as_string(self) -> String {
         self.chars().collect()
+    }
+
+    pub fn is_fit(self, word: Self) -> bool {
+        for (target, source) in self.bits().zip(word.bits()) {
+            if target & 0x20 > 0 && source & 0x20 > 0 && target != source {
+                return false;
+            }
+        }
+        true
     }
 }
 

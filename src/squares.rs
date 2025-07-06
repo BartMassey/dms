@@ -1,26 +1,7 @@
 use crate::words::Word;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct Square([u32; 10]);
-
-impl Default for Square {
-    fn default() -> Self {
-        Square([0; 10])
-    }
-}
-
-fn is_fit_word(target: u32, source: u32) -> bool {
-    for i in 0..5 {
-        let bi = 6 * (4 - i);
-        let x = (target >> bi) & 0x3f;
-        let y = (source >> bi) & 0x3f;
-        if x & 0x20 > 0 && y & 0x20 > 0 && x != y {
-            return false;
-        }
-    }
-
-    true
-}
 
 impl Square {
     fn get_coord(&self, pos: usize, offset: usize) -> Option<u8> {
@@ -36,7 +17,7 @@ impl Square {
 
     pub fn get_char(&self, pos: usize, offset: usize) -> char {
         match self.get_coord(pos, offset) {
-            Some(v) => (v as u8 + b'a') as char,
+            Some(v) => (v + b'a') as char,
             None => '.',
         }
     }
@@ -60,8 +41,23 @@ impl Square {
         }
     }
 
+    pub fn clear_pos(&mut self, pos: usize) {
+        self.0[pos] = 0;
+        
+        let (xoffset, yoffset) = if pos < 5 {
+            (0, 5)
+        } else {
+            (5, 0)
+        };
+        let tpos = 6 * (4 - (pos - xoffset));
+        for i in 0..5 {
+            self.0[i + yoffset] &= !(0x3f << tpos);
+        }
+    }
+
+    #[allow(unused)]
     pub fn is_fit(&self, pos: usize, word: Word) -> bool {
-        is_fit_word(self.0[pos], word.0)
+        Word(self.0[pos]).is_fit(word)
     }
 
     pub fn as_string(&self) -> String {
@@ -78,6 +74,7 @@ impl Square {
         result
     }
 
+    #[allow(unused)]
     pub fn is_full(&self) -> bool {
         for pos in 0..5 {
             for offset in 0..5 {
