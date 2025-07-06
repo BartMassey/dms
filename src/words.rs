@@ -23,7 +23,7 @@ impl Word {
         Ok(Self(result))
     }
 
-    fn bits(self) -> impl Iterator<Item = u8> {
+    pub fn bits(self) -> impl Iterator<Item = u8> {
         let mut i = 0;
         std::iter::from_fn(move || {
             if i < 5 {
@@ -40,8 +40,10 @@ impl Word {
         self.bits().map(|bits| {
             if bits & 0x20 > 0 {
                 ((bits & 0x1f) + b'a') as char
-            } else {
+            } else if bits == 0 {
                 '.'
+            } else {
+                panic!("internal error: bad bits value");
             }
         })
     }
@@ -58,6 +60,15 @@ impl Word {
         }
         true
     }
+
+    pub fn is_empty(self) -> bool {
+        self.0 == 0
+    }
+
+    pub fn is_full(self) -> bool {
+        let mask = 0b00_100000_100000_100000_100000_100000;
+        self.0 & mask == mask
+    }
 }
 
 #[test]
@@ -73,6 +84,17 @@ fn test_word() {
     assert_eq!(word.0, 0b00_100000_100001_100010_000000_100100);
     let s = word.as_string();
     assert_eq!(w, &s);
+}
+
+#[test]
+fn test_is_fit() {
+    let target = Word::from_str("ab.d.").unwrap();
+    let word = Word::from_str("abcde").unwrap();
+    assert!(target.is_fit(word));
+    let word = Word::from_str(".bc..").unwrap();
+    assert!(target.is_fit(word));
+    let word = Word::from_str(".cc..").unwrap();
+    assert!(!target.is_fit(word));
 }
 
 impl std::fmt::Display for Word {

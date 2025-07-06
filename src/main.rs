@@ -6,7 +6,6 @@ mod words;
 use squares::*;
 use words::*;
 
-use std::collections::HashSet;
 use std::io::{BufReader, BufRead};
 use std::fs::File;
 use std::process::exit;
@@ -14,16 +13,28 @@ use std::process::exit;
 use anyhow::Error;
 extern crate serde_json;
 
-type WordSet = HashSet<Word>;
+fn best_pos(s: &Square, words: &[Word]) -> Option<(usize, usize)> {
+    let mut scores = Vec::with_capacity(9);
+    for p in 1..10 {
+        let target = s.get_pos(p);
+        if target.is_empty() || target.is_full() {
+            continue;
+        }
+        let nmatches = words
+            .iter()
+            .filter(|&&w| target.is_fit(w))
+            .count();
+        scores.push((nmatches, p));
+    }
 
-// XXX Limited; only checks columns, assumes rows are ok.
-// XXX Buggy; allows fitting the same word to multiple columns.
-fn cols_ok(s: &Square, words: &[Word], used: &WordSet) -> bool {
-    let cross_fit = move |target: Word| {
+    scores
+        .into_iter()
+        .min()
+}
+
+fn cross_fit(s: &Square, words: &[Word], pos: usize) -> bool {
+    let cross_fit_word = move |target: Word| {
         for &w in words {
-            if used.contains(&w) {
-                continue;
-            }
             if target.is_fit(w) {
                 return true;
             }
@@ -31,40 +42,93 @@ fn cols_ok(s: &Square, words: &[Word], used: &WordSet) -> bool {
         false
     };
 
-    for p in 5..10 {
+    let range = if pos < 5 {
+        5..10
+    } else {
+        0..5
+    };
+
+    for p in range {
         let target = s.get_pos(p);
-        if !cross_fit(target) {
+        if !cross_fit_word(target) {
             return false;
         }
     }
     true
 }
 
-fn find_all(s: &mut Square, words: &[Word], used: &mut WordSet, results: &mut Vec<Square>) {
-    let mut p = 0;
-    while p < 5 {
-        if s.get_char(p, 0) == '.' {
-            break;
-        }
-        p += 1;
+#[test]
+fn test_fitting() {
+    let init_words = [
+        "abcde",
+        "fghij",
+        "klmno",
+        "pqrst",
+        "uvwxy",
+    ];
+    let init_words: [Word; 5] = std::array::from_fn(
+        |i| Word::from_str(init_words[i]).unwrap()
+    );
+    let mut s = Square::default();
+    for i in 0..5 {
+        s.set_pos(i, init_words[i]);
     }
-    if p == 5 {
+
+    let mut dict: Vec<Word> = (0..10)
+        .map(|i| s.get_pos(i))
+        .collect();
+    dict.push(Word::from_str("agmsy").unwrap());
+
+    s.set_coord(1, 1, '.');
+    s.set_coord(1, 2, '.');
+
+    let (_, p) = best_pos(&s, &dict).unwrap();
+    assert!(p == 1, "{}", p);
+
+    let word = dict[6];
+    assert!(s.is_fit(6, word));
+    s.set_pos(6, word);
+    assert!(cross_fit(&s, &dict, 6), "{}", s.as_string());
+
+    let word = dict[7];
+    assert!(s.is_fit(7, word));
+    s.set_pos(7, word);
+    assert!(cross_fit(&s, &dict, 7), "{}", s.as_string());
+}
+
+fn find_all(s: &mut Square, words: &[Word], results: &mut Vec<Square>) {
+    if s.is_empty() {
+        for &w in words {
+            s.set_pos(0, w);
+            find_all(s, words, results);
+        }
+        return;
+    }
+
+    if s.is_full() {
         eprintln!("{}", s.as_string());
         eprintln!();
         results.push(s.clone());
         return;
     }
-    for &w in words {
-        if used.contains(&w) {
-            continue;
+
+    let p = if let Some((m, p)) = best_pos(s, words) {
+        if m == 0 {
+            panic!("internal error: best_pos 0:\n{}\n", s.as_string());
         }
+        assert!(p > 0);
+        p
+    } else {
+        panic!("internal error: best_pos None:\n{}\n", s.as_string());
+    };
+
+    let target = s.get_pos(p);
+    for &w in words.iter().filter(|&&w| target.is_fit(w)) {
         s.set_pos(p, w);
-        used.insert(w);
-        if cols_ok(s, words, used) {
-            find_all(s, words, used, results);
+        if cross_fit(s, words, p) {
+            find_all(s, words, results);
         }
-        used.remove(&w);
-        s.clear_pos(p);
+        s.set_pos(p, target);
     }
 }
 
@@ -76,9 +140,8 @@ fn run() -> Result<usize, Error> {
         .collect::<Result<Vec<_>, Error>>()?;
 
     let mut s = Square::default();
-    let mut used = HashSet::with_capacity(25);
     let mut results = Vec::new();
-    find_all(&mut s, &words, &mut used, &mut results);
+    find_all(&mut s, &words, &mut results);
     
     let save = File::create("squares.json")?;
     serde_json::to_writer(save, &results)?;
