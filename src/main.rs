@@ -57,20 +57,13 @@ fn cross_fit(s: &Square, words: &[Word], pos: usize) -> bool {
 
 #[test]
 fn test_fitting() {
-    let init_words = [
+    let mut s = Square::from_rows([
         "abcde",
         "fghij",
         "klmno",
         "pqrst",
         "uvwxy",
-    ];
-    let init_words: [Word; 5] = std::array::from_fn(
-        |i| Word::from_str(init_words[i]).unwrap()
-    );
-    let mut s = Square::default();
-    for i in 0..5 {
-        s.set_pos(i, init_words[i]);
-    }
+    ]);
 
     let mut dict: Vec<Word> = (0..10)
         .map(|i| s.get_pos(i))
@@ -149,11 +142,11 @@ fn run() -> Result<usize, Error> {
 fn main() {
     match run() {
         Err(e) => {
-            eprintln!("dms: {}", e);
+            eprintln!("dms: {e}");
             exit(1);
         }
         Ok(nsquares) => {
-            println!("{} squares", nsquares);
+            println!("{nsquares} squares");
             
         }
     }
