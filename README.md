@@ -1,8 +1,7 @@
-# dms: doubly-magic word squares
+# mws5: 5×5 magic word squares
 Bart Massey 2025
 
-Construct all five-letter word squares containining no
-repeated words.
+Construct all five-letter word squares.
 
 ## Acknowledgments
 

@@ -1,5 +1,3 @@
-#![allow(clippy::uninlined_format_args)]
-
 mod squares;
 mod words;
 
