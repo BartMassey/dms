@@ -7,7 +7,7 @@ pub struct Square([u32; 10]);
 
 impl Square {
     #[allow(unused)]
-    fn from_rows(rows: [&str; 5]) -> Self {
+    pub fn from_rows(rows: [&str; 5]) -> Self {
         let posns: [[u8; 5]; 5] = rows.map(|r| {
             let word = Word::from_str(r).unwrap();
             let mut row = [0u8; 5];
@@ -188,7 +188,7 @@ fn test_coord_pos() {
             if j == 3 {
                 continue;
             }
-            assert_eq!(s.get_char(i, j), '.', "{} {}", i, j);
+            assert_eq!(s.get_char(i, j), '.', "{i} {j}");
         }
     }
     for i in 5..10 {
@@ -199,7 +199,7 @@ fn test_coord_pos() {
             if j == 1 {
                 continue;
             }
-            assert_eq!(s.get_char(i, j), '.', "{} {}", i, j);
+            assert_eq!(s.get_char(i, j), '.', "{i} {j}");
         }
     }
 }
