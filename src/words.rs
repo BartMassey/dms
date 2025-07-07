@@ -1,6 +1,6 @@
 use anyhow::{Error, bail};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct Word(pub u32);
 
 impl Word {

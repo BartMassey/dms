@@ -1,43 +1,31 @@
 mod squares;
 mod words;
+mod dict;
 
 use squares::*;
-use words::*;
+use dict::*;
 
-use std::io::{BufRead, BufReader};
 use std::fs::File;
 use std::process::exit;
 
 use anyhow::Error;
 extern crate serde_json;
 
-fn best_pos(s: &Square, words: &[Word]) -> Option<(usize, usize)> {
+fn best_pos(s: &Square, dict: &Dict) -> Option<(usize, usize)> {
     let mut scores = Vec::with_capacity(9);
     for p in 1..10 {
         let target = s.get_pos(p);
         if target.is_empty() || target.is_full() {
             continue;
         }
-        let nmatches = words
-            .iter()
-            .filter(|&&w| target.is_fit(w))
-            .count();
+        let nmatches = dict.matches(target).count();
         scores.push((nmatches, p));
     }
 
     scores.into_iter().min()
 }
 
-fn cross_fit(s: &Square, words: &[Word], pos: usize) -> bool {
-    let cross_fit_word = move |target: Word| {
-        for &w in words {
-            if target.is_fit(w) {
-                return true;
-            }
-        }
-        false
-    };
-
+fn cross_fit(s: &Square, dict: &Dict, pos: usize) -> bool {
     let range = if pos < 5 {
         5..10
     } else {
@@ -46,7 +34,7 @@ fn cross_fit(s: &Square, words: &[Word], pos: usize) -> bool {
 
     for p in range {
         let target = s.get_pos(p);
-        if !cross_fit_word(target) {
+        if !dict.has_match(target) {
             return false;
         }
     }
@@ -63,10 +51,11 @@ fn test_fitting() {
         "uvwxy",
     ]);
 
-    let mut dict: Vec<Word> = (0..10)
+    let words: Vec<Word> = (0..10)
         .map(|i| s.get_pos(i))
         .collect();
-    dict.push(Word::from_str("agmsy").unwrap());
+    let mut dict = Dict::from_words(words.as_ref());
+    dict.add_str("agmsy").unwrap();
 
     s.set_coord(1, 1, '.');
     s.set_coord(1, 2, '.');
@@ -74,22 +63,22 @@ fn test_fitting() {
     let (_, p) = best_pos(&s, &dict).unwrap();
     assert!(p == 1, "{}", p);
 
-    let word = dict[6];
+    let word = words[6];
     assert!(s.is_fit(6, word));
     s.set_pos(6, word);
     assert!(cross_fit(&s, &dict, 6), "{}", s.as_string());
 
-    let word = dict[7];
+    let word = words[7];
     assert!(s.is_fit(7, word));
     s.set_pos(7, word);
     assert!(cross_fit(&s, &dict, 7), "{}", s.as_string());
 }
 
-fn find_all(s: &mut Square, words: &[Word], results: &mut Vec<Square>) {
+fn find_all(s: &mut Square, dict: &Dict, results: &mut Vec<Square>) {
     if s.is_empty() {
-        for &w in words {
+        for &w in dict {
             s.set_pos(0, w);
-            find_all(s, words, results);
+            find_all(s, dict, results);
         }
         return;
     }
@@ -101,7 +90,7 @@ fn find_all(s: &mut Square, words: &[Word], results: &mut Vec<Square>) {
         return;
     }
 
-    let p = if let Some((m, p)) = best_pos(s, words) {
+    let p = if let Some((m, p)) = best_pos(s, dict) {
         if m == 0 {
             panic!("internal error: best_pos 0:\n{}\n", s.as_string());
         }
@@ -112,25 +101,25 @@ fn find_all(s: &mut Square, words: &[Word], results: &mut Vec<Square>) {
     };
 
     let target = s.get_pos(p);
-    for &w in words.iter().filter(|&&w| target.is_fit(w)) {
+    for &w in dict.iter().filter(|&&w| target.is_fit(w)) {
         s.set_pos(p, w);
-        if cross_fit(s, words, p) {
-            find_all(s, words, results);
+        if cross_fit(s, dict, p) {
+            find_all(s, dict, results);
         }
         s.set_pos(p, target);
     }
 }
 
 fn run() -> Result<usize, Error> {
-    let words = File::open("usa_5.txt")?;
-    let words = BufReader::new(words)
+    let words = std::fs::read_to_string("usa_5.txt")?;
+    let words: Vec<&str> = words
         .lines()
-        .map(|w| Word::from_str(&w?))
-        .collect::<Result<Vec<_>, Error>>()?;
+        .collect();
+    let dict = Dict::new(words.as_ref())?;
 
     let mut s = Square::default();
     let mut results = Vec::new();
-    find_all(&mut s, &words, &mut results);
+    find_all(&mut s, &dict, &mut results);
 
     let save = File::create("squares.json")?;
     serde_json::to_writer(save, &results)?;
