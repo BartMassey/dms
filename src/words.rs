@@ -1,4 +1,4 @@
-use anyhow::{bail, Error};
+use anyhow::{Error, bail};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub struct Word(pub u32);

@@ -4,7 +4,7 @@ mod words;
 use squares::*;
 use words::*;
 
-use std::io::{BufReader, BufRead};
+use std::io::{BufRead, BufReader};
 use std::fs::File;
 use std::process::exit;
 
@@ -25,9 +25,7 @@ fn best_pos(s: &Square, words: &[Word]) -> Option<(usize, usize)> {
         scores.push((nmatches, p));
     }
 
-    scores
-        .into_iter()
-        .min()
+    scores.into_iter().min()
 }
 
 fn cross_fit(s: &Square, words: &[Word], pos: usize) -> bool {
@@ -133,7 +131,7 @@ fn run() -> Result<usize, Error> {
     let mut s = Square::default();
     let mut results = Vec::new();
     find_all(&mut s, &words, &mut results);
-    
+
     let save = File::create("squares.json")?;
     serde_json::to_writer(save, &results)?;
     Ok(results.len())
