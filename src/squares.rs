@@ -206,7 +206,8 @@ fn test_coord_pos() {
 
 impl serde::Serialize for Square {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-       where S: serde::Serializer
+    where
+        S: serde::Serializer
     {
         let mut seq = serializer.serialize_seq(Some(5))?;
         for pos in 0..5 {
