@@ -1,6 +1,6 @@
 use crate::words::Word;
 
-use std::cell::{RefCell, RefMut};
+use std::cell::RefCell;
 use std::collections::HashSet;
 
 use anyhow::{Error, bail};
@@ -41,8 +41,30 @@ impl Dict {
         Ok(())
     }
 
-    pub fn get_hit_cache(&self) -> RefMut<HashSet<Word>> {
-        self.hit_cache.borrow_mut()
+    pub fn is_fit<T>(&self, targets: T) -> bool
+    where
+        T: Iterator<Item = Word>
+    {
+        let mut hit_cache = self.hit_cache.borrow_mut();
+        let mut fits = HashSet::with_capacity(hit_cache.len());
+
+        'search: for target in targets {
+            for &h in &*hit_cache {
+                if target.is_fit(h) {
+                    fits.insert(h);
+                    continue 'search;
+                }
+            }
+
+            if let Some(h) = self.matches(target).next() {
+                fits.insert(h);
+            } else {
+                return false;
+            }
+        }
+
+        *hit_cache = fits;
+        true
     }
 
     pub fn matches(&self, target: Word) -> impl Iterator<Item = Word> {
