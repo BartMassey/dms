@@ -5,6 +5,7 @@ mod dict;
 use squares::*;
 use dict::*;
 
+use std::collections::HashSet;
 use std::fs::File;
 use std::process::exit;
 
@@ -32,17 +33,38 @@ fn cross_fit(s: &Square, dict: &Dict, pos: usize) -> bool {
         0..5
     };
 
-    for p in range {
+    let mut ok = true;
+    let mut hit_cache = dict.get_hit_cache();
+    let mut fits = HashSet::with_capacity(hit_cache.len());
+    'search: for p in range {
         let target = s.get_pos(p);
-        if !dict.has_match(target) {
-            return false;
+
+        for &h in &*hit_cache {
+            if target.is_fit(h) {
+                fits.insert(h);
+                continue 'search;
+            }
+        }
+        
+        if let Some(h) = dict.matches(target).next() {
+            fits.insert(h);
+        } else {
+            ok = false;
+            break;
         }
     }
-    true
+
+    if ok {
+        *hit_cache = fits;
+    }
+
+    ok
 }
 
 #[test]
 fn test_fitting() {
+    use crate::words::Word;
+
     let mut s = Square::from_rows([
         "abcde",
         "fghij",

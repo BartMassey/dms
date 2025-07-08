@@ -1,9 +1,13 @@
 use crate::words::Word;
 
+use std::cell::{RefCell, RefMut};
+use std::collections::HashSet;
+
 use anyhow::{Error, bail};
 
 pub struct Dict {
     word_list: Vec<Word>,
+    hit_cache: RefCell<HashSet<Word>>,
 }
 
 impl Dict {
@@ -12,13 +16,15 @@ impl Dict {
             .iter()
             .map(|w| Word::from_str(w))
             .collect::<Result<Vec<_>, _>>()?;
-        Ok(Self { word_list })
+        let hit_cache = RefCell::new(HashSet::with_capacity(10));
+        Ok(Self { word_list, hit_cache })
     }
 
     pub fn from_words(words: &[Word]) -> Self {
         let mut word_list = words.to_vec();
         word_list.sort();
-        Self { word_list }
+        let hit_cache = RefCell::new(HashSet::with_capacity(10));
+        Self { word_list, hit_cache }
     }
 
     pub fn iter(&self) -> impl Iterator<Item=&Word> {
@@ -35,8 +41,8 @@ impl Dict {
         Ok(())
     }
 
-    pub fn has_match(&self, target: Word) -> bool {
-        self.matches(target).nth(0).is_some()
+    pub fn get_hit_cache(&self) -> RefMut<HashSet<Word>> {
+        self.hit_cache.borrow_mut()
     }
 
     pub fn matches(&self, target: Word) -> impl Iterator<Item = Word> {
