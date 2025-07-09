@@ -39,7 +39,6 @@ pub struct AppState {
     pub nodes: usize,
     pub limit: Option<usize>,
     pub trace: TraceStyle,
-    #[allow(unused)]
     pub doubled: bool,
     #[allow(unused)]
     pub transposed: bool,

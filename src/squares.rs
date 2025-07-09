@@ -1,5 +1,7 @@
 use crate::words::Word;
 
+use std::collections::HashSet;
+
 use serde::{self, ser::SerializeSeq};
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -161,6 +163,16 @@ impl Square {
                 );
             }
         }
+    }
+
+    pub fn has_double(&self) -> bool {
+        let mut count = 0;
+        let words: HashSet<Word> = (0..10)
+            .map(|i| self.get_pos(i))
+            .filter(|w| w.is_full())
+            .inspect(|_| count += 1)
+            .collect();
+        return words.len() < count;
     }
 }
 

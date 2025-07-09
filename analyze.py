@@ -1,10 +1,15 @@
-import json
+import argparse, json
+
+ap = argparse.ArgumentParser()
+ap.add_argument("--save")
+ap.add_argument("squares", nargs="?", default="squares.json")
+args = ap.parse_args()
 
 with open("usa_5.txt") as f:
     dict = f.read().splitlines()
 dict_set = set(dict)
 
-with open("squares.json") as f:
+with open(args.squares) as f:
     data = json.load(f)
 
 def transpose(s):
@@ -37,5 +42,6 @@ print(f"doubly: {len(doubly)}")
 canonical = set(s for s in doubly if transpose(s)[0] > s[0])
 print(f"canonical: {len(canonical)}")
 
-with open("dmws.json", "w") as f:
-    json.dump(sorted(list(canonical)), f)
+if args.save:
+    with open(args.save, "w") as f:
+        json.dump(sorted(list(canonical)), f)
