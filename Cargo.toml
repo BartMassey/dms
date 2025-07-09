@@ -1,14 +1,17 @@
 [package]
 name = "mws5"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2024"
 
 [dependencies]
 anyhow = "1.0.98"
 caches = "0.3.0"
-clap = { version = "4.5.40", features = ["derive"] }
 serde = "1.0.219"
 serde_json = "1.0.140"
+
+[dependencies.clap]
+version = "4.5.40"
+features = ["derive"]
 
 [profile.release]
 debug = true

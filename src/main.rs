@@ -14,7 +14,7 @@ use std::process::exit;
 use anyhow::Error;
 extern crate serde_json;
 
-fn run() -> Result<usize, Error> {
+fn run() -> Result<(usize, usize), Error> {
     let mut app_state = AppState::new();
 
     let words = std::fs::read_to_string("usa_5.txt")?;
@@ -29,7 +29,7 @@ fn run() -> Result<usize, Error> {
 
     let save = File::create("squares.json")?;
     serde_json::to_writer(save, &results)?;
-    Ok(results.len())
+    Ok((results.len(), app_state.nodes))
 }
 
 fn main() {
@@ -38,9 +38,8 @@ fn main() {
             eprintln!("dms: {e}");
             exit(1);
         }
-        Ok(nsquares) => {
-            println!("{nsquares} squares");
-            
+        Ok((nsquares, nnodes)) => {
+            println!("{nsquares} squares ({nnodes} nodes)");
         }
     }
 }

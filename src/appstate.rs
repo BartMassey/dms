@@ -29,23 +29,43 @@ struct Args {
     limit: Option<usize>,
     #[arg(short, long, default_value="none")]
     trace: TraceStyle,
+    #[arg(short, long)]
+    doubled: bool,
+    #[arg(short, long)]
+    transposed: bool,
 }
 
 pub struct AppState {
     pub nodes: usize,
     pub limit: Option<usize>,
     pub trace: TraceStyle,
+    #[allow(unused)]
+    pub doubled: bool,
+    #[allow(unused)]
+    pub transposed: bool,
 }
 
 impl Default for AppState {
     fn default() -> Self {
-        Self { nodes: 0, limit: Some(1000), trace: TraceStyle::None }
+        Self {
+            nodes: 0,
+            limit: Some(1000),
+            trace: TraceStyle::None,
+            doubled: false,
+            transposed: false,
+        }
     }
 }
 
 impl AppState {
     pub fn new() -> Self {
         let args = Args::parse();
-        Self { nodes: 0, limit: args.limit, trace: args.trace }
+        Self {
+            nodes: 0,
+            limit: args.limit,
+            trace: args.trace,
+            doubled: args.doubled,
+            transposed: args.transposed,
+        }
     }
 }
