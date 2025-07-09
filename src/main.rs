@@ -6,7 +6,6 @@ use squares::*;
 use dict::*;
 
 use std::fs::File;
-use std::io::{Write, stderr};
 use std::process::exit;
 
 use anyhow::Error;
@@ -81,8 +80,6 @@ fn find_all(s: &mut Square, dict: &Dict, results: &mut Vec<Square>) {
     }
 
     if s.is_full() {
-        eprint!("{}", s.get_char(0, 0));
-        let _ = stderr().flush();
         results.push(s.clone());
         return;
     }
