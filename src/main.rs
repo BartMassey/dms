@@ -19,7 +19,7 @@ fn best_pos(s: &Square, dict: &Dict) -> Option<(usize, usize)> {
         if target.is_empty() || target.is_full() {
             continue;
         }
-        let nmatches = dict.matches(target).count();
+        let nmatches = dict.match_count(target);
         scores.push((nmatches, p));
     }
 
