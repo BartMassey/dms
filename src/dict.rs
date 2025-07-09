@@ -9,15 +9,15 @@ use caches::{Cache, lfu::WTinyLFUCache as Wtlfu};
 pub struct Dict {
     word_list: Vec<Word>,
     word_set: HashSet<Word>,
-    hit_cache: RefCell<HashSet<Word>>,
+    hit_cache: RefCell<Wtlfu<Word, bool>>,
     count_cache: RefCell<Wtlfu<Word, usize>>,
 }
 
 impl Dict {
     fn init(word_list: Vec<Word>) -> Self {
         let word_set: HashSet<Word> = word_list.iter().copied().collect();
-        let hit_cache = RefCell::new(HashSet::with_capacity(10));
-        let count_cache = RefCell::new(Wtlfu::new(128, 4).unwrap());
+        let hit_cache = RefCell::new(Wtlfu::new(1024, 8).unwrap());
+        let count_cache = RefCell::new(Wtlfu::new(1024, 8).unwrap());
         Self { word_list, word_set, hit_cache, count_cache }
     }
 
@@ -58,38 +58,34 @@ impl Dict {
         T: Iterator<Item = Word>
     {
         let mut hit_cache = self.hit_cache.borrow_mut();
-        let mut fits = HashSet::with_capacity(hit_cache.len());
 
-        'search: for target in targets {
+        for target in targets {
+            if let Some(&status) = hit_cache.get(&target) {
+                if status {
+                    continue;
+                } else {
+                    return false;
+                }
+            }
+
+
             if target.is_full() {
-                if hit_cache.contains(&target) {
-                    fits.insert(target);
+                let status = self.word_set.contains(&target);
+                hit_cache.put(target, status);
+                if status {
                     continue;
-                }
-
-                if self.word_set.contains(&target) {
-                    fits.insert(target);
-                    continue;
-                }
-                
-                return false;
-            }
-
-            for &h in &*hit_cache {
-                if target.is_fit(h) {
-                    fits.insert(h);
-                    continue 'search;
+                } else {
+                    return false;
                 }
             }
 
-            if let Some(h) = self.matches(target).next() {
-                fits.insert(h);
-            } else {
+            let status = self.matches(target).next().is_some();
+            hit_cache.put(target, status);
+            if !status {
                 return false;
             }
         }
 
-        *hit_cache = fits;
         true
     }
 
