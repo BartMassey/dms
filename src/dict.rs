@@ -16,8 +16,8 @@ pub struct Dict {
 impl Dict {
     fn init(word_list: Vec<Word>) -> Self {
         let word_set: HashSet<Word> = word_list.iter().copied().collect();
-        let hit_cache = RefCell::new(Wtlfu::new(1024, 8).unwrap());
-        let count_cache = RefCell::new(Wtlfu::new(1024, 8).unwrap());
+        let hit_cache = RefCell::new(Wtlfu::new(40_000, 2000).unwrap());
+        let count_cache = RefCell::new(Wtlfu::new(40_000, 2000).unwrap());
         Self { word_list, word_set, hit_cache, count_cache }
     }
 
