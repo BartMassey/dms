@@ -68,7 +68,6 @@ impl Dict {
                 }
             }
 
-
             if target.is_full() {
                 let status = self.word_set.contains(&target);
                 hit_cache.put(target, status);

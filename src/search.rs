@@ -16,7 +16,11 @@ fn best_pos(s: &Square, dict: &Dict) -> Option<(usize, usize)> {
     scores.into_iter().min()
 }
 
-fn cross_fit(s: &Square, dict: &Dict, pos: usize) -> bool {
+fn cross_fit(s: &Square, dict: &Dict, pos: usize, doubled: bool) -> bool {
+    if !doubled && s.has_double() {
+        return false;
+    }
+
     let range = if pos < 5 {
         5..10
     } else {
@@ -41,6 +45,10 @@ impl AppState {
         }
 
         if s.is_full() {
+            if self.doubled {
+                assert!(!s.has_double(), "{}", s.as_string());
+            }
+
             results.push(s.clone());
 
             match self.trace {
@@ -78,8 +86,11 @@ impl AppState {
         let target = s.get_pos(p);
         for &w in dict.iter().filter(|&&w| target.is_fit(w)) {
             s.set_pos(p, w);
-            if cross_fit(s, dict, p) && !self.find_all(s, dict, results) {
-                return false;
+            let fit = cross_fit(s, dict, p, self.doubled);
+            if fit {
+                if !self.find_all(s, dict, results) {
+                    return false;
+                }
             }
             s.set_pos(p, target);
         }
@@ -115,10 +126,10 @@ fn test_fitting() {
     let word = words[6];
     assert!(s.is_fit(6, word));
     s.set_pos(6, word);
-    assert!(cross_fit(&s, &dict, 6), "{}", s.as_string());
+    assert!(cross_fit(&s, &dict, 6, false), "{}", s.as_string());
 
     let word = words[7];
     assert!(s.is_fit(7, word));
     s.set_pos(7, word);
-    assert!(cross_fit(&s, &dict, 7), "{}", s.as_string());
+    assert!(cross_fit(&s, &dict, 7, false), "{}", s.as_string());
 }
