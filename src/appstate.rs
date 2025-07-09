@@ -1,0 +1,51 @@
+use std::str::FromStr;
+
+use anyhow::{Error, bail};
+use clap::Parser;
+
+#[derive(Debug, Clone, Copy)]
+pub enum TraceStyle {
+    None,
+    Short,
+    Full,
+}
+
+impl FromStr for TraceStyle {
+    type Err = Error;
+
+    fn from_str(style: &str) -> Result<Self, Error> {
+        match style {
+            "none" => Ok(TraceStyle::None),
+            "short" => Ok(TraceStyle::Short),
+            "full" => Ok(TraceStyle::Full),
+            s => bail!("{s}: unknown trace style"),
+        }
+    }
+}
+
+#[derive(Parser)]
+struct Args {
+    #[arg(short, long, default_value="None")]
+    limit: Option<usize>,
+    #[arg(short, long, default_value="none")]
+    trace: TraceStyle,
+}
+
+pub struct AppState {
+    pub nodes: usize,
+    pub limit: Option<usize>,
+    pub trace: TraceStyle,
+}
+
+impl Default for AppState {
+    fn default() -> Self {
+        Self { nodes: 0, limit: Some(1000), trace: TraceStyle::None }
+    }
+}
+
+impl AppState {
+    pub fn new() -> Self {
+        let args = Args::parse();
+        Self { nodes: 0, limit: args.limit, trace: args.trace }
+    }
+}
