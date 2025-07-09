@@ -7,6 +7,7 @@ use anyhow::{Error, bail};
 
 pub struct Dict {
     word_list: Vec<Word>,
+    word_set: HashSet<Word>,
     hit_cache: RefCell<HashSet<Word>>,
 }
 
@@ -16,15 +17,17 @@ impl Dict {
             .iter()
             .map(|w| Word::from_str(w))
             .collect::<Result<Vec<_>, _>>()?;
+        let word_set: HashSet<Word> = word_list.iter().copied().collect();
         let hit_cache = RefCell::new(HashSet::with_capacity(10));
-        Ok(Self { word_list, hit_cache })
+        Ok(Self { word_list, word_set, hit_cache })
     }
 
     pub fn from_words(words: &[Word]) -> Self {
         let mut word_list = words.to_vec();
         word_list.sort();
+        let word_set: HashSet<Word> = word_list.iter().copied().collect();
         let hit_cache = RefCell::new(HashSet::with_capacity(10));
-        Self { word_list, hit_cache }
+        Self { word_list, word_set, hit_cache }
     }
 
     pub fn iter(&self) -> impl Iterator<Item=&Word> {
@@ -49,6 +52,20 @@ impl Dict {
         let mut fits = HashSet::with_capacity(hit_cache.len());
 
         'search: for target in targets {
+            if target.is_full() {
+                if hit_cache.contains(&target) {
+                    fits.insert(target);
+                    continue;
+                }
+
+                if self.word_set.contains(&target) {
+                    fits.insert(target);
+                    continue;
+                }
+                
+                return false;
+            }
+
             for &h in &*hit_cache {
                 if target.is_fit(h) {
                     fits.insert(h);
