@@ -25,7 +25,7 @@ impl FromStr for TraceStyle {
 
 #[derive(Parser)]
 struct Args {
-    #[arg(short, long, default_value="None")]
+    #[arg(short, long)]
     limit: Option<usize>,
     #[arg(short, long, default_value="none")]
     trace: TraceStyle,
