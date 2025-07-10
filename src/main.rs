@@ -12,12 +12,14 @@ use std::fs::File;
 use std::process::exit;
 
 use anyhow::Error;
+use clap::Parser;
 extern crate serde_json;
 
 fn run() -> Result<(usize, usize), Error> {
-    let mut app_state = AppState::new();
+    let args = Args::parse();
+    let mut app_state = AppState::new(&args);
 
-    let words = std::fs::read_to_string("usa_5.txt")?;
+    let words = std::fs::read_to_string(args.dict)?;
     let words: Vec<&str> = words
         .lines()
         .collect();
@@ -27,7 +29,7 @@ fn run() -> Result<(usize, usize), Error> {
     let mut results = Vec::new();
     app_state.find_all(&mut s, &dict, &mut results);
 
-    let save = File::create("squares.json")?;
+    let save = File::create(args.output)?;
     serde_json::to_writer(save, &results)?;
     Ok((results.len(), app_state.nodes))
 }
