@@ -1,16 +1,16 @@
 [package]
 name = "mws5"
-version = "0.3.0"
+version = "0.4.0"
 edition = "2024"
 
 [dependencies]
-anyhow = "1.0.98"
-caches = "0.3.0"
-serde = "1.0.219"
-serde_json = "1.0.140"
+anyhow = "1.0"
+caches = "0.3"
+serde = "1.0"
+serde_json = "1.0"
 
 [dependencies.clap]
-version = "4.5.40"
+version = "4.5"
 features = ["derive"]
 
 [profile.release]

@@ -1,9 +1,12 @@
 use anyhow::{Error, bail};
 
+use std::array::from_fn as array_fn;
 use std::cmp::Ordering;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct Word(pub u32);
+
+pub type WordIndex = [[Vec<Word>; 26]; 5];
 
 impl Word {
     pub fn from_str(word: &str) -> Result<Self, Error> {
@@ -35,6 +38,22 @@ impl Word {
             } else {
                 None
             }
+        })
+    }
+
+    pub fn get_bits(self, i: usize) -> u8 {
+        ((self.0 >> (6 * (4 - i))) & 0x3f) as u8
+    }
+
+    pub fn build_word_index(words: &[Word]) -> WordIndex {
+        let mut words = words.to_vec();
+        array_fn(|i| {
+            words.sort_by_key(|&w| (w.get_bits(i), w));
+            array_fn(|j| {
+                let start = words.partition_point(|w| w.get_bits(i) < 0x20 | j as u8);
+                let end = words.partition_point(|w| w.get_bits(i) <= 0x20 | j as u8);
+                words[start..end].to_vec()
+            })
         })
     }
 

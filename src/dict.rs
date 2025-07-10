@@ -1,4 +1,4 @@
-use crate::words::Word;
+use crate::words::*;
 
 use std::cell::RefCell;
 use std::collections::HashSet;
@@ -9,6 +9,7 @@ use caches::{Cache, lfu::WTinyLFUCache as Wtlfu};
 pub struct Dict {
     word_list: Vec<Word>,
     word_set: HashSet<Word>,
+    word_index: WordIndex,
     hit_cache: RefCell<Wtlfu<Word, bool>>,
     count_cache: RefCell<Wtlfu<Word, usize>>,
 }
@@ -16,9 +17,11 @@ pub struct Dict {
 impl Dict {
     fn init(word_list: Vec<Word>) -> Self {
         let word_set: HashSet<Word> = word_list.iter().copied().collect();
+        let word_index = Word::build_word_index(&word_list);
         let hit_cache = RefCell::new(Wtlfu::new(40_000, 2000).unwrap());
         let count_cache = RefCell::new(Wtlfu::new(40_000, 2000).unwrap());
-        Self { word_list, word_set, hit_cache, count_cache }
+
+        Self { word_list, word_set, word_index, hit_cache, count_cache }
     }
 
     pub fn new(words: &[&str]) -> Result<Self, Error>  {
@@ -89,7 +92,17 @@ impl Dict {
     }
 
     pub fn matches(&self, target: Word) -> impl Iterator<Item = Word> {
-        self.word_list.iter().copied().filter(move |&w| target.is_fit(w))
+        let smallest = (0..5)
+            .map(|i| (i, target.get_bits(i)))
+            .filter(|&(_, b)| b & 0x20 > 0)
+            .map(|(i, b)| &self.word_index[i][(b & 0x1f) as usize])
+            .min_by_key(|wi| wi.len())
+            .unwrap();
+        
+        smallest
+            .iter()
+            .copied()
+            .filter(move |&w| target.is_fit(w))
     }
 
     pub fn match_count(&self, target: Word) -> usize {
