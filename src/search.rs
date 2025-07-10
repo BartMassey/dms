@@ -58,7 +58,7 @@ impl AppState {
         }
 
         if s.is_full() {
-            if self.doubled {
+            if !self.doubled {
                 assert!(!s.has_double(), "{}", s.as_string());
             }
 
