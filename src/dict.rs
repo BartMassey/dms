@@ -117,7 +117,8 @@ impl Dict {
     }
 
     pub fn matches(&self, target: Word) -> Vec<Word> {
-        let indices = self.match_indices(target);
+        let mut indices = self.match_indices(target);
+        indices.sort_by_key(|x| x.len());
 
         indices[0]
             .iter()
