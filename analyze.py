@@ -1,7 +1,8 @@
 import argparse, json
 
 ap = argparse.ArgumentParser()
-ap.add_argument("--save")
+ap.add_argument("-o", "--output")
+ap.add_argument("-s", "--save-format", default="json")
 ap.add_argument("squares", nargs="?", default="squares.json")
 args = ap.parse_args()
 
@@ -28,6 +29,10 @@ def check_square(s):
             return False
     return True
 
+def print_square(s, f):
+    for i in range(5):
+        print(s[i], file=f)
+
 print(f"squares: {len(data)}")
 
 bad = [s for s in data if not check_square(s)]
@@ -36,12 +41,21 @@ print(f"bad: {len(bad)}")
 unique = set(tuple(s) for s in data)
 print(f"unique: {len(unique)}")
 
-canonical = set(s for s in unique if transpose(s)[0] > s[0])
-print(f"canonical: {len(canonical)}")
-
-doubly = set(s for s in canonical if len(words(s)) == 10)
+doubly = set(s for s in unique if len(words(s)) == 10)
 print(f"doubly: {len(doubly)}")
 
-if args.save:
-    with open(args.save, "w") as f:
-        json.dump(sorted(list(canonical)), f)
+canonical = set(s for s in doubly if transpose(s)[0] > s[0])
+print(f"canonical: {len(canonical)}")
+
+if args.output:
+    squares = sorted(list(canonical))
+    with open(args.output, "w") as f:
+        if args.save_format == "json":
+            json.dump(squares, f)
+        elif args.save_format == "txt":
+            print_square(squares[0], f)
+            for s in squares[1:]:
+                print(file=f)
+                print_square(s, f)
+        else:
+            raise Exception(f"{args.output_format}: unknown format")
