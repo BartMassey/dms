@@ -23,21 +23,20 @@ fn cross_fit(
     doubled: bool,
     transposed: bool,
 ) -> bool {
+    if !transposed && s.is_transposed() {
+        return false;
+    }
+
     let range = if pos < 5 {
         5..10
     } else {
         0..5
     };
-
     if !dict.is_fit(range.map(|p| s.get_pos(p))) {
         return false;
     }
 
     if !doubled && s.has_double() {
-        return false;
-    }
-
-    if !transposed && s.is_transposed() {
         return false;
     }
 
