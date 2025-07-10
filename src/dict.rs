@@ -81,7 +81,7 @@ impl Dict {
                 }
             }
 
-            let status = self.matches(target).next().is_some();
+            let status = self.has_match(target);
             hit_cache.put(target, status);
             if !status {
                 return false;
@@ -91,28 +91,52 @@ impl Dict {
         true
     }
 
-    pub fn matches(&self, target: Word) -> impl Iterator<Item = Word> {
-        let smallest = (0..5)
+    fn has_match(&self, target: Word) -> bool {
+        let index = (0..5)
             .map(|i| (i, target.get_bits(i)))
             .filter(|&(_, b)| b & 0x20 > 0)
             .map(|(i, b)| &self.word_index[i][(b & 0x1f) as usize])
-            .min_by_key(|wi| wi.len())
-            .unwrap();
-        
-        smallest
+            .min_by_key(|ws| ws.len());
+        match index {
+            Some(ws) => {
+                ws.iter().cloned().find(|&w| target.is_fit(w)).is_some()
+            }
+            None => true,
+        }
+    }
+
+    fn match_set(&self, target: Word) -> HashSet<Word> {
+        let mut sets = (0..5)
+            .map(|i| (i, target.get_bits(i)))
+            .filter(|&(_, b)| b & 0x20 > 0)
+            .map(|(i, b)| &self.word_index[i][(b & 0x1f) as usize]);
+
+        // Thanks to Perplexity for this .fold1() impl.
+        sets
+            .next()
+            .map(|x| sets.fold(x.clone(), |a, x| {
+                a.intersection(x).cloned().collect()
+            }))
+            .unwrap()
+    }
+
+    pub fn matches(&self, target: Word) -> Vec<Word> {
+        let mut words: Vec<Word> = self
+            .match_set(target)
             .iter()
-            .copied()
-            .filter(move |&w| target.is_fit(w))
+            .cloned()
+            .collect();
+        words.sort_unstable();
+        words
     }
 
     pub fn match_count(&self, target: Word) -> usize {
         let mut count_cache = self.count_cache.borrow_mut();
-
         if let Some(&count) = count_cache.get(&target) {
             return count;
         }
 
-        let count = self.matches(target).count();
+        let count = self.match_set(target).len();
         count_cache.put(target, count);
         count
     }

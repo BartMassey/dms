@@ -2,11 +2,12 @@ use anyhow::{Error, bail};
 
 use std::array::from_fn as array_fn;
 use std::cmp::Ordering;
+use std::collections::HashSet;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct Word(pub u32);
 
-pub type WordIndex = [[Vec<Word>; 26]; 5];
+pub type WordIndex = [[HashSet<Word>; 26]; 5];
 
 impl Word {
     pub fn from_str(word: &str) -> Result<Self, Error> {
@@ -52,7 +53,7 @@ impl Word {
             array_fn(|j| {
                 let start = words.partition_point(|w| w.get_bits(i) < 0x20 | j as u8);
                 let end = words.partition_point(|w| w.get_bits(i) <= 0x20 | j as u8);
-                words[start..end].to_vec()
+                words[start..end].iter().copied().collect()
             })
         })
     }
