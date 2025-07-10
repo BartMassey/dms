@@ -1,3 +1,25 @@
+/*!
+Theory of operation:
+
+* A word square has five row and five column positions:
+
+       56789
+      0
+      1
+      2
+      3
+      4
+
+* Start by placing a word in position 1.
+* Continue by finding a most-constrained not-full
+  position for the next placement.
+* For every word that might be placed there, check that it
+  will "fit" and not violate any word constraint.
+* Recursively call to place another branch.
+* If a square is ever filled, record it.
+
+*/
+
 use crate::appstate::*;
 use crate::squares::*;
 use crate::dict::*;

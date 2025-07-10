@@ -24,14 +24,15 @@ impl FromStr for TraceStyle {
 }
 
 #[derive(Parser)]
+#[command(version, about, long_about = None)]
 struct Args {
-    #[arg(short, long)]
+    #[arg(short, long, help="maximum number of squares to produce")]
     limit: Option<usize>,
-    #[arg(short, long, default_value="none")]
+    #[arg(short, long, default_value="none", help="trace style (none, short, full)")]
     trace: TraceStyle,
-    #[arg(short, long)]
+    #[arg(short, long, help="allow the same word two or more times in a square")]
     doubled: bool,
-    #[arg(short, long)]
+    #[arg(short, long, help="produce both canonical squares and their transposions")]
     transposed: bool,
 }
 

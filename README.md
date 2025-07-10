@@ -1,12 +1,81 @@
 # mws5: 5×5 magic word squares
 Bart Massey 2025
 
-Construct all five-letter word squares.
+Construct all five-letter-by-five-letter canonical
+doubly-magic word squares from a given dictionary.
+
+## Fancy Word Squares
+
+Here is an example of a 5×5 canonical doubly-magic word
+square:
+
+    mores
+    uvula
+    siren
+    enact
+    delta
+
+This is a *word square*, since every row and column is a word
+from the dictionary used in construction.
+
+This is a *doubly-magic* word square, since no word is used
+more than once.
+
+This is a *canonical* word square, since row one is a
+lexically-earlier word than column one. (The *transpose* of
+any word square — flipping it across the diagonal — is also
+a word square. We count these as uninterestingly different
+and take the canonical one as the representative.)
+
+## Usage
+
+Build and run this Rust program with `cargo run --release`.
+
+Use `cargo run --release -- --help` to get help with
+possible arguments.
+
+By default, the program uses `usa_5.txt` as the dictionary,
+runs silently, and saves results into `squares.json`. These
+things can be changed with program arguments.
+
+`analyze.py` checks and cleans up a `squares.json` file.
+
+## Time and Resources
+
+As of this writing, on my home box, this program completes
+in about 1.5 minutes.
+
+Times on my home box (AMD Ryzen 9 3900X):
+
+* Naïve algorithm: did not finish.
+* First most-constrained search: 60m35s.
+* Added hit cache for cross-fit and count cache for
+  best-pos: 15m00s.
+* Added de-doubling (doubly-magic checks): 15m00s.
+* Added de-transposition (canonicity checks): 14m08s.
+* Added split dictionary for checks: 4m52s.
+* Added split dictionary for search
+  * Full: 1m56s.
+  * Doubly-magic canonical: 1m25s.
+
+Generating full squares is about 80M nodes.
+
+## Profiling
+
+This crate is set up to profile with `cargo flamegraph
+--release`. You'll want to run `systctl.sh` on Linux to get
+access to programming features.
+
+There are a couple of flame graphs in the `artifacts/`
+folder.
 
 ## Acknowledgments
 
 Thanks to Gene Welborn for introducing the problem and
 providing a reference dictionary.
+
+Thanks to the author of the `caches` lib crate for nice
+caches.
 
 ## License
 
