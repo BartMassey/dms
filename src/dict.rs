@@ -2,6 +2,8 @@ use crate::words::*;
 
 use std::cell::RefCell;
 use std::collections::HashSet;
+use std::mem::replace;
+use std::slice::Iter as SliceIter;
 
 use anyhow::{Error, bail};
 use caches::{Cache, lfu::WTinyLFUCache as Wtlfu};
@@ -48,7 +50,7 @@ impl Dict {
             bail!("incomplete word");
         }
         let empty_list = Vec::new();
-        let mut word_list = std::mem::replace(&mut self.word_list, empty_list);
+        let mut word_list = replace(&mut self.word_list, empty_list);
         word_list.push(word);
         word_list.sort();
         let d = Self::init(word_list);
@@ -91,43 +93,44 @@ impl Dict {
         true
     }
 
-    fn has_match(&self, target: Word) -> bool {
-        let index = (0..5)
+    fn match_indices(&self, target: Word) -> Vec<&HashSet<Word>> {
+        (0..5)
             .map(|i| (i, target.get_bits(i)))
             .filter(|&(_, b)| b & 0x20 > 0)
             .map(|(i, b)| &self.word_index[i][(b & 0x1f) as usize])
-            .min_by_key(|ws| ws.len());
-        match index {
-            Some(ws) => {
-                ws.iter().cloned().find(|&w| target.is_fit(w)).is_some()
-            }
-            None => true,
-        }
+            .collect()
     }
 
-    fn match_set(&self, target: Word) -> HashSet<Word> {
-        let mut sets = (0..5)
-            .map(|i| (i, target.get_bits(i)))
-            .filter(|&(_, b)| b & 0x20 > 0)
-            .map(|(i, b)| &self.word_index[i][(b & 0x1f) as usize]);
+    fn has_match(&self, target: Word) -> bool {
+        let index = self
+            .match_indices(target)
+            .into_iter()
+            .min_by_key(|x| x.len())
+            .unwrap();
 
-        // Thanks to Perplexity for this .fold1() impl.
-        sets
-            .next()
-            .map(|x| sets.fold(x.clone(), |a, x| {
-                a.intersection(x).cloned().collect()
-            }))
-            .unwrap()
+        for &w in index {
+            if target.is_fit(w) {
+                return true;
+            }
+        }
+        false
     }
 
     pub fn matches(&self, target: Word) -> Vec<Word> {
-        let mut words: Vec<Word> = self
-            .match_set(target)
+        let indices = self.match_indices(target);
+
+        indices[0]
             .iter()
-            .cloned()
-            .collect();
-        words.sort_unstable();
-        words
+            .filter(|&w| {
+                for s in &indices[1..] {
+                    if !s.contains(w) {
+                        return false;
+                    }
+                }
+                true
+            })
+            .copied()
+            .collect()
     }
 
     pub fn match_count(&self, target: Word) -> usize {
@@ -136,7 +139,7 @@ impl Dict {
             return count;
         }
 
-        let count = self.match_set(target).len();
+        let count = self.matches(target).len();
         count_cache.put(target, count);
         count
     }
@@ -144,9 +147,27 @@ impl Dict {
 
 impl<'a> IntoIterator for &'a Dict {
     type Item = &'a Word;
-    type IntoIter = std::slice::Iter<'a, Word>;
+    type IntoIter = SliceIter<'a, Word>;
     
     fn into_iter(self) -> Self::IntoIter {
         self.word_list.iter()
     }
+}
+
+#[test]
+fn test_matches() {
+    let words = [
+        "abcde",
+        "abcdf",
+        "bcdef",
+    ];
+    let dict = Dict::new(&words).unwrap();
+
+    let result: Vec<_> = words[..2]
+        .iter()
+        .map(|w| Word::from_str(w).unwrap())
+        .collect();
+    let target = Word::from_str("a....").unwrap();
+    let matches: Vec<_> = dict.matches(target);
+    assert_eq!(matches, result);
 }

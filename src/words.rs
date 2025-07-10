@@ -3,6 +3,8 @@ use anyhow::{Error, bail};
 use std::array::from_fn as array_fn;
 use std::cmp::Ordering;
 use std::collections::HashSet;
+use std::fmt::{Display, Formatter, Result as FmtResult};
+use std::iter::from_fn as iter_fn;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct Word(pub u32);
@@ -31,7 +33,7 @@ impl Word {
 
     pub fn bits(self) -> impl Iterator<Item = u8> {
         let mut i = 0;
-        std::iter::from_fn(move || {
+        iter_fn(move || {
             if i < 5 {
                 let bits = (self.0 >> (6 * (4 - i))) & 0x3f;
                 i += 1;
@@ -151,8 +153,8 @@ fn test_is_fit() {
     assert!(!target.is_fit(word));
 }
 
-impl std::fmt::Display for Word {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl Display for Word {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         write!(f, "{}", self.as_string())
     }
 }

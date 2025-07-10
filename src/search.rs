@@ -184,3 +184,4 @@ fn test_fitting() {
     s.set_pos(5, word);
     assert!(!cross_fit(&s, &dict, 7, true, false), "{}", s.as_string());
 }
+
