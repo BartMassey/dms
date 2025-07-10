@@ -33,6 +33,13 @@ def print_square(s, f):
     for i in range(5):
         print(s[i], file=f)
 
+def is_magic(s):
+    t = transpose(s)
+    for i in range(5):
+        if s[i] != t[i]:
+            return False
+    return True
+
 print(f"squares: {len(data)}")
 
 bad = [s for s in data if not check_square(s)]
@@ -40,6 +47,9 @@ print(f"bad: {len(bad)}")
 
 unique = set(tuple(s) for s in data)
 print(f"unique: {len(unique)}")
+
+magic = set(s for s in unique if is_magic(s))
+print(f"magic: {len(magic)}")
 
 doubly = set(s for s in unique if len(words(s)) == 10)
 print(f"doubly: {len(doubly)}")
