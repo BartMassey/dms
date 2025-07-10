@@ -36,11 +36,11 @@ print(f"bad: {len(bad)}")
 unique = set(tuple(s) for s in data)
 print(f"unique: {len(unique)}")
 
-doubly = set(s for s in unique if len(words(s)) == 10)
-print(f"doubly: {len(doubly)}")
-
-canonical = set(s for s in doubly if transpose(s)[0] > s[0])
+canonical = set(s for s in unique if transpose(s)[0] > s[0])
 print(f"canonical: {len(canonical)}")
+
+doubly = set(s for s in canonical if len(words(s)) == 10)
+print(f"doubly: {len(doubly)}")
 
 if args.save:
     with open(args.save, "w") as f:

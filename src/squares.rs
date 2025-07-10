@@ -172,7 +172,13 @@ impl Square {
             .filter(|w| w.is_full())
             .inspect(|_| count += 1)
             .collect();
-        return words.len() < count;
+        words.len() < count
+    }
+
+    pub fn is_transposed(&self) -> bool {
+        let across = self.get_pos(0);
+        let down = self.get_pos(5);
+        across.is_transposed(down)
     }
 }
 

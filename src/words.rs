@@ -69,6 +69,37 @@ impl Word {
         let mask = 0b00_100000_100000_100000_100000_100000;
         self.0 & mask == mask
     }
+
+    pub fn is_transposed(self, down: Word) -> bool {
+        for (a, d) in self.bits().zip(down.bits()) {
+            if d & 0x20 > 0 {
+                if d < a {
+                    return true;
+                }
+            } else {
+                break;
+            }
+        }
+        false
+    }
+}
+
+#[test]
+fn test_is_transposed() {
+    let across = Word::from_str("defgh").unwrap();
+    let downs = [
+        ("dfghi", false),
+        ("deghi", false),
+        ("d.abc", false),
+        ("def.b", false),
+        ("deegb", true),
+        ("da.bc", true),
+    ];
+    let downs = downs.map(|(w, r)| (Word::from_str(w).unwrap(), r));
+    
+    for (down, result) in downs {
+        assert_eq!(across.is_transposed(down), result, "{}", down.as_string());
+    }
 }
 
 #[test]
