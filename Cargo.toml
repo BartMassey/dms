@@ -1,10 +1,10 @@
 [package]
-name = "mws5"
-version = "0.4.0"
+name = "ws5"
+version = "0.5.0"
 edition = "2024"
 authors = ["Bart Massey <bart.massey@gmail.com>"]
 license-file = "LICENSE.txt"
-description = "Find doubly-magic canonical 5×5 word squares."
+description = "Find 5×5 word squares."
 
 [dependencies]
 anyhow = "1.0"

@@ -1,13 +1,13 @@
-# mws5: 5×5 magic word squares
+# ws5: 5×5 word squares
 Bart Massey 2025
 
-Construct all five-letter-by-five-letter canonical
-doubly-magic word squares from a given dictionary.
+Construct all five-letter-by-five-letter word squares from a
+given dictionary under various constraints.
 
 ## Fancy Word Squares
 
-Here is an example of a 5×5 canonical doubly-magic word
-square:
+Here is an example of a 5×5 canonical double [word
+square](https://en.wikipedia.org/wiki/Word_square):
 
     mores
     uvula
@@ -18,7 +18,7 @@ square:
 This is a *word square*, since every row and column is a word
 from the dictionary used in construction.
 
-This is a *doubly-magic* word square, since no word is used
+This is a *double* word square, since no word is used
 more than once.
 
 This is a *canonical* word square, since row one is a
@@ -51,14 +51,15 @@ Times on my home box (AMD Ryzen 9 3900X):
 * First most-constrained search: 60m35s.
 * Added hit cache for cross-fit and count cache for
   best-pos: 15m00s.
-* Added de-doubling (doubly-magic checks): 15m00s.
+* Added de-doubling (doubly checks): 15m00s.
 * Added de-transposition (canonicity checks): 14m08s.
 * Added split dictionary for checks: 4m52s.
 * Added split dictionary for search
   * Full: 1m56s.
-  * Doubly-magic canonical: 1m25s.
+  * Double canonical: 1m25s.
 
-Generating full squares is about 80M nodes.
+Generating full squares is about 80M nodes. Double-canonical
+is about 60M.
 
 ## Profiling
 
