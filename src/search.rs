@@ -24,20 +24,21 @@ use crate::appstate::*;
 use crate::squares::*;
 use crate::dict::*;
 
+/// Report the number of most-constrained next-word position
+/// matches, and the position. Returns [None] if no
+/// placement is possible.
+// XXX Used to have a gratuitous collect().
 fn best_pos(s: &Square, dict: &Dict) -> Option<(usize, usize)> {
-    let mut scores = Vec::with_capacity(9);
-    for p in 1..10 {
-        let target = s.get_pos(p);
-        if target.is_empty() || target.is_full() {
-            continue;
-        }
-        let nmatches = dict.match_count(target);
-        scores.push((nmatches, p));
-    }
-
-    scores.into_iter().min()
+    (0..10)
+        .map(|p| (p, s.get_pos(p)))
+        .filter(|(_, target)| !target.is_empty() && !target.is_full())
+        .map(|(p, target)| (dict.match_count(target), p))
+        .min()
 }
 
+/// Verify that all cross-targets of position `pos` can be
+/// legally filled with something, under the given constraints.
+// XXX The order of tests here matters a bit.
 fn cross_fit(
     s: &Square,
     dict: &Dict,
@@ -66,10 +67,19 @@ fn cross_fit(
 }
 
 impl AppState {
-    pub fn find_all(&mut self, s: &mut Square, dict: &Dict, results: &mut Vec<Square>) -> bool {
+    /// Accumulate all the word squares under the given
+    /// constraints in `results`. Returns [false] if
+    /// terminating early, [true] otherwise.
+    pub fn find_all(
+        &mut self,
+        s: &mut Square,
+        dict: &Dict,
+        results: &mut Vec<Square>,
+    ) -> bool {
         self.nodes += 1;
 
-        if s.is_empty() {
+        // Initial case: place a word in the first row and recurse.
+        if s.get_pos(0).is_empty() {
             for &w in dict {
                 s.set_pos(0, w);
                 if !self.find_all(s, dict, results) {
@@ -79,13 +89,17 @@ impl AppState {
             return true;
         }
 
+        // Base case: found a solution. Save and trace it.
         if s.is_full() {
+            // Safety check.
             if !self.doubled {
                 assert!(!s.has_double(), "{}", s.as_string());
             }
 
+            // Save the solution.
             results.push(s.clone());
 
+            // Show progress according to style.
             match self.trace {
                 TraceStyle::None => (),
                 TraceStyle::Short => {
@@ -102,32 +116,48 @@ impl AppState {
                 TraceStyle::Full => eprintln!("{}\n", s.as_string()),
             }
 
+            // If enough solutions have been found, bail.
             match self.limit {
                 Some(limit) => return results.len() < limit,
                 None => return true,
             }
         }
 
+        // Recursive case: Try to place a word, then try to solve the rest.
+
+        // Find the placement position.
         let p = if let Some((m, p)) = best_pos(s, dict) {
+            // Safety checks.
             if m == 0 {
                 panic!("internal error: best_pos 0:\n{}\n", s.as_string());
             }
             assert!(p > 0);
+
             p
         } else {
             panic!("internal error: best_pos None:\n{}\n", s.as_string());
         };
 
+        // Try to solve the rest. Get possible next words
+        // and see if they fit. If so, recurse.
         let target = s.get_pos(p);
         for w in dict.matches(target) {
+            // Place the word.
             s.set_pos(p, w);
+
+            // Check for fit.
             let fit = cross_fit(s, dict, p, self.doubled, self.transposed);
+
             #[allow(clippy::collapsible_if)]
+            // I find this much more readable
             if fit {
+                // Recurse.
                 if !self.find_all(s, dict, results) {
                     return false;
                 }
             }
+
+            // Undo the placement.
             s.set_pos(p, target);
         }
 

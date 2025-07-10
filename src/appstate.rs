@@ -1,9 +1,13 @@
+//! Application state structure used in the search. Also,
+//! command-line argument parsing.
+
 use std::str::FromStr;
 use std::path::PathBuf;
 
 use anyhow::{Error, bail};
 use clap::Parser;
 
+/// Used for progress traces.
 #[derive(Debug, Clone, Copy)]
 pub enum TraceStyle {
     None,
@@ -11,6 +15,8 @@ pub enum TraceStyle {
     Full,
 }
 
+/// The argument parser needs to know names for the trace
+/// styles.
 impl FromStr for TraceStyle {
     type Err = Error;
 
@@ -24,6 +30,7 @@ impl FromStr for TraceStyle {
     }
 }
 
+/// The command-line argument struct.
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
 pub struct Args {
@@ -46,14 +53,21 @@ pub struct Args {
     pub dict: PathBuf,
 }
 
+/// The app state. Contains things needed during search.
 pub struct AppState {
+    /// Number of nodes searched.
     pub nodes: usize,
+    /// Potential limit on solutions returned.
     pub limit: Option<usize>,
+    /// Progress trace style.
     pub trace: TraceStyle,
+    /// Allow words to appear multiple times in a square.
     pub doubled: bool,
+    /// Allow transposed squares.
     pub transposed: bool,
 }
 
+#[cfg(test)]
 impl Default for AppState {
     fn default() -> Self {
         Self {
@@ -67,6 +81,7 @@ impl Default for AppState {
 }
 
 impl AppState {
+    /// Given the arguments, set up the state.
     pub fn new(args: &Args) -> Self {
         Self {
             nodes: 0,

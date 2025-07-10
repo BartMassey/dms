@@ -1,14 +1,98 @@
-use crate::words::Word;
+//! Implementation of the word square grid.
+
+// XXX The bit arithmetic here should be moved into [Word]
+// by refactoring.
+
+use crate::words::*;
 
 use std::collections::HashSet;
 
 use serde::{self, ser::SerializeSeq};
 
+/// Save all the rows and columns of the grid separately for
+/// (dubious) efficiency reasons.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct Square([u32; 10]);
 
 impl Square {
-    #[allow(unused)]
+    /// Get the word at a particular position.
+    pub fn get_pos(&self, pos: usize) -> Word {
+        Word(self.0[pos])
+    }
+
+    /// Set the word at a particular position. This includes
+    /// updating the cross-words. This operation is
+    /// destructive, changing or removing existing cells.
+    pub fn set_pos(&mut self, pos: usize, w: Word) {
+        // Set the position.
+        self.0[pos] = w.0;
+        
+        // Find cross-positions.
+        let (xoffset, yoffset) = if pos < 5 {
+            (0, 5)
+        } else {
+            (5, 0)
+        };
+
+        // Update cross-positions.
+        let tpos = 6 * (4 - (pos - xoffset));
+        for i in 0..5 {
+            let x = ((w.0 >> (6 * (4 - i))) & 0x3f) << tpos;
+            let mask = !(0x3f << tpos);
+            let target = &mut self.0[i + yoffset];
+            *target = (*target & mask) | x;
+        }
+    }
+
+    /// Make a printable version of the grid. Does not end
+    /// with a newline.
+    // XXX Should this be a Display impl?
+    pub fn as_string(&self) -> String {
+        let mut result = String::with_capacity(35);
+
+        // Note the "separator trick" here.
+        for i in 0..5 {
+            let row = self.get_pos(i);
+            result += &row.as_string();
+            if i < 4 {
+                result += "\n";
+            }
+        }
+
+        result
+    }
+
+    /// Check whether this word square is fully filled out.
+    // XXX This used to be a complicated `for` loop.
+    pub fn is_full(&self) -> bool {
+        (0..5).all(|p| self.get_pos(p).is_full())
+    }
+
+    /// Test whether any word in the square is repeated.
+    // XXX Should be replaced with a `.fold()` to
+    // avoid some churn.
+    pub fn has_double(&self) -> bool {
+        let mut count = 0;
+        let words: HashSet<Word> = (0..10)
+            .map(|i| self.get_pos(i))
+            .filter(|w| w.is_full())
+            .inspect(|_| count += 1)
+            .collect();
+        words.len() < count
+    }
+
+    /// The square is guaranteed to be transposed when the
+    /// first row is transposed with the first column.
+    pub fn is_transposed(&self) -> bool {
+        let across = self.get_pos(0);
+        let down = self.get_pos(5);
+        across.is_transposed(down)
+    }
+}
+
+#[cfg(test)]
+impl Square {
+    /// Quickly construct a test square.
     pub fn from_rows(rows: [&str; 5]) -> Self {
         let posns: [[u8; 5]; 5] = rows.map(|r| {
             let word = Word::from_str(r).unwrap();
@@ -38,6 +122,8 @@ impl Square {
         s
     }
 
+    /// Get the bit representation of a particular position in the
+    /// square.
     fn get_coord(&self, pos: usize, offset: usize) -> Option<u8> {
         assert!(pos < 10 && offset < 5);
 
@@ -49,7 +135,7 @@ impl Square {
         }
     }
 
-    #[allow(unused)]
+    /// Set a particular position in the square in tests.
     pub fn set_coord(&mut self, pos: usize, offset: usize, value: char) {
         assert!(pos < 10 && offset < 5);
 
@@ -78,7 +164,7 @@ impl Square {
         *target = (*target & mask) | v;
     }
 
-    #[allow(unused)]
+    /// Get a particular coordinate in tests.
     pub fn get_char(&self, pos: usize, offset: usize) -> char {
         match self.get_coord(pos, offset) {
             Some(v) => (v + b'a') as char,
@@ -86,64 +172,13 @@ impl Square {
         }
     }
 
-    pub fn get_pos(&self, pos: usize) -> Word {
-        Word(self.0[pos])
-    }
-
-    pub fn set_pos(&mut self, pos: usize, w: Word) {
-        self.0[pos] = w.0;
-        
-        let (xoffset, yoffset) = if pos < 5 {
-            (0, 5)
-        } else {
-            (5, 0)
-        };
-        let tpos = 6 * (4 - (pos - xoffset));
-        for i in 0..5 {
-            let x = ((w.0 >> (6 * (4 - i))) & 0x3f) << tpos;
-            let mask = !(0x3f << tpos);
-            let target = &mut self.0[i + yoffset];
-            *target = (*target & mask) | x;
-        }
-    }
-
-    #[allow(unused)]
+    /// Verify that the given `word` can go in this square
+    /// at the given `position`. Does not check cross-words.
     pub fn is_fit(&self, pos: usize, word: Word) -> bool {
         Word(self.0[pos]).is_fit(word)
     }
 
-    pub fn as_string(&self) -> String {
-        let mut result = String::with_capacity(35);
-
-        for i in 0..5 {
-            let row = self.get_pos(i);
-            result += &row.as_string();
-            if i < 4 {
-                result += "\n";
-            }
-        }
-
-        result
-    }
-
-    #[allow(unused)]
-    pub fn is_full(&self) -> bool {
-        for pos in 0..5 {
-            for offset in 0..5 {
-                if self.get_coord(pos, offset).is_none() {
-                    return false;
-                }
-            }
-        }
-
-        true
-    }
-
-    pub fn is_empty(&self) -> bool {
-        (0..5).all(|i| self.get_pos(i).is_empty())
-    }
-
-    #[allow(unused)]
+    /// Test validity of the current position.
     fn fsck_square(&self) {
         for p in 0..10 {
             let word: Vec<char> = self.get_pos(p).chars().collect();
@@ -163,22 +198,6 @@ impl Square {
                 );
             }
         }
-    }
-
-    pub fn has_double(&self) -> bool {
-        let mut count = 0;
-        let words: HashSet<Word> = (0..10)
-            .map(|i| self.get_pos(i))
-            .filter(|w| w.is_full())
-            .inspect(|_| count += 1)
-            .collect();
-        words.len() < count
-    }
-
-    pub fn is_transposed(&self) -> bool {
-        let across = self.get_pos(0);
-        let down = self.get_pos(5);
-        across.is_transposed(down)
     }
 }
 
