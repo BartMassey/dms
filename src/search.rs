@@ -97,7 +97,7 @@ impl AppState {
         };
 
         let target = s.get_pos(p);
-        for &w in dict.iter().filter(|&&w| target.is_fit(w)) {
+        for w in dict.matches(target) {
             s.set_pos(p, w);
             let fit = cross_fit(s, dict, p, self.doubled, self.transposed);
             #[allow(clippy::collapsible_if)]
