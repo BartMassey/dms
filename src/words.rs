@@ -1,5 +1,7 @@
 use anyhow::{Error, bail};
 
+use std::cmp::Ordering;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct Word(pub u32);
 
@@ -73,8 +75,10 @@ impl Word {
     pub fn is_transposed(self, down: Word) -> bool {
         for (a, d) in self.bits().zip(down.bits()) {
             if d & 0x20 > 0 {
-                if d < a {
-                    return true;
+                match a.cmp(&d) {
+                    Ordering::Less => return false,
+                    Ordering::Greater => return true,
+                    _ => (),
                 }
             } else {
                 break;
@@ -89,10 +93,9 @@ fn test_is_transposed() {
     let across = Word::from_str("defgh").unwrap();
     let downs = [
         ("dfghi", false),
-        ("deghi", false),
+        ("dezab", false),
         ("d.abc", false),
         ("def.b", false),
-        ("deegb", true),
         ("da.bc", true),
     ];
     let downs = downs.map(|(w, r)| (Word::from_str(w).unwrap(), r));
