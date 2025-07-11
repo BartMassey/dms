@@ -1,3 +1,12 @@
+## The Genesis
+
+* Next-door neighbor writes some Python. Estimates
+  a year of runtime.
+  
+* I estimate I can do the same thing in one minute.
+
+* A week or more of work I don't have time for ensues.
+
 ## 5×5 Word Squares
 
 * Magic
@@ -15,6 +24,14 @@
       erode
       agree
       sends
+
+* Transpositions
+
+      areas
+      barge
+      adorn
+      coded
+      knees
 
 ## Searching For All Solutions
 
@@ -97,6 +114,11 @@
 * Really hard to debug this kind of code. Use lots of unit
   tests.
 
+* Write auxiliary tools to help. Maybe even in Python!
+
+* Runtimes are ridiculous. Use a small example to debug and
+  measure performance. I didn't this time. I'm dumb.
+
 * Profiling can help speed things up. Use a profiler.
 
 * Early pruning is essential.
@@ -105,4 +127,9 @@
   allocator.  Use do-undo. Use iterators.
 
 * Code should pay for itself. No big complexity for tiny
-  (less than 2-3×) gains.
+  (less than 2-3×) gains. Problem is "exponential", so
+  claiming one-time linear speedups is boring unless
+  really large.
+
+* Rust "functional programming" is a thing. Iterators
+  are key to performance.
