@@ -58,6 +58,9 @@ Times on my home box (AMD Ryzen 9 3900X):
   * Full: 1m56s.
   * Double canonical: 1m25s.
 
+On my laptop (Intel Lunar Lake Core Ultra 7 258V) the
+runtime of the current version is 56s.
+
 Generating full squares is about 80M nodes. Double-canonical
 is about 60M.
 
