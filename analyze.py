@@ -51,11 +51,12 @@ print(f"unique: {len(unique)}")
 magic = set(s for s in unique if is_magic(s))
 print(f"magic: {len(magic)}")
 
-doubly = set(s for s in unique if len(words(s)) == 10)
+canonical = set(s for s in unique if transpose(s)[0] > s[0])
+print(f"canonical: {len(canonical)}")
+
+doubly = set(s for s in canonical if len(words(s)) == 10)
 print(f"doubly: {len(doubly)}")
 
-canonical = set(s for s in doubly if transpose(s)[0] > s[0])
-print(f"canonical: {len(canonical)}")
 
 if args.output:
     squares = sorted(list(canonical))
