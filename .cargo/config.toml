@@ -1,2 +1,3 @@
 [build]
+# Runtime goes from 1m29 to 1m24 on my desktop.
 rustflags = ["-C", "target-cpu=native"]

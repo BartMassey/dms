@@ -17,7 +17,15 @@ version = "4.5"
 features = ["derive"]
 
 [profile.release]
-debug = true
+# Build time goes from 2s to 6s on my machine.
+# But you can profile with `cargo flamegraph`.
+# debug = true
+# Runtime stays about the same on my machine.
+# Build time increases slightly.
 opt-level = 3
+# Runtime goes from 1m40 to 1m23 on my machine.
+# Build time decreases slightly (!).
 codegen-units = 1
+# Runtime goes from 1m29 to 1m23 on my machine.
+# Build time goes from 2s to 9s.
 lto = "fat"
