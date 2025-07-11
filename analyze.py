@@ -36,10 +36,7 @@ def print_square(s, f):
 
 def is_magic(s):
     t = transpose(s)
-    for i in range(5):
-        if s[i] != t[i]:
-            return False
-    return True
+    return t != list(s)
 
 print(f"squares: {len(data)}")
 
