@@ -51,7 +51,7 @@ fn run() -> Result<(usize, usize), Error> {
 fn main() {
     match run() {
         Err(e) => {
-            eprintln!("dms: {e}");
+            eprintln!("ms5: {e}");
             exit(1);
         }
         Ok((nsquares, nnodes)) => {
