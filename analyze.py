@@ -2,7 +2,8 @@ import argparse, json
 
 ap = argparse.ArgumentParser()
 ap.add_argument("-o", "--output")
-ap.add_argument("-s", "--save-format", default="json")
+ap.add_argument("-s", "--save-format", default="txt")
+ap.add_argument("-m", "--magic", action="store_true")
 ap.add_argument("squares", nargs="?", default="squares.json")
 args = ap.parse_args()
 
@@ -57,9 +58,12 @@ print(f"canonical: {len(canonical)}")
 doubly = set(s for s in canonical if len(words(s)) == 10)
 print(f"doubly: {len(doubly)}")
 
+final = doubly
+if args.magic:
+    final = magic
 
 if args.output:
-    squares = sorted(list(canonical))
+    squares = sorted(list(final))
     with open(args.output, "w") as f:
         if args.save_format == "json":
             json.dump(squares, f)

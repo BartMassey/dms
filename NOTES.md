@@ -1,0 +1,108 @@
+## 5×5 Word Squares
+
+* Magic
+
+      aback
+      belle
+      alloy
+      close
+      keyed
+
+* "Double"
+
+      aback
+      radon
+      erode
+      agree
+      sends
+
+## Searching For All Solutions
+
+* Finding all of these is "complete state-space search". In
+  practice, depth-first search from partial to complete
+  solutions.
+  
+* Dumb: start with a word
+
+      aback
+      .....
+      .....
+      .....
+      .....
+
+  add another word
+
+      aback
+      abaft
+      .....
+      .....
+      .....
+
+  when full
+
+      aback
+      abaft
+      abase
+      abash
+      abate
+
+  note failure and try fixing the last line
+
+      aback
+      abaft
+      abase
+      abash
+      .....
+
+      aback
+      abaft
+      abase
+      abash
+      abbey
+
+* Naïve: Notice when stuck and retry
+
+      aback
+      abaft
+      .....
+      .....
+      .....
+
+  Nope. Look for the first word that could work.
+
+      aback
+      baron
+      .....
+      .....
+      .....
+
+  Backtrack when stuck. Can work, but maybe a day.
+
+* Basic: Try alternating vertical and horizontal words.
+  
+* Standard: Try the hardest-to-fill position first.
+
+      aback
+      ...on
+      ...de
+      ...ee
+      ...ds
+
+* The rest is implementation
+
+## Implementation
+
+* Recursive depth-first search is fairly standard.
+
+* Really hard to debug this kind of code. Use lots of unit
+  tests.
+
+* Profiling can help speed things up. Use a profiler.
+
+* Early pruning is essential.
+
+* Want to keep memory use small because caches and
+  allocator.  Use do-undo. Use iterators.
+
+* Code should pay for itself. No big complexity for tiny
+  (less than 2-3×) gains.
