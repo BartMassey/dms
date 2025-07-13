@@ -2,12 +2,12 @@ import argparse, json
 
 ap = argparse.ArgumentParser()
 ap.add_argument("-o", "--output")
-ap.add_argument("-s", "--save-format", default="txt")
 ap.add_argument("-m", "--magic", action="store_true")
+ap.add_argument("-d", "--dictionary", default="usa_5.txt")
 ap.add_argument("squares", nargs="?", default="squares.json")
 args = ap.parse_args()
 
-with open("usa_5.txt") as f:
+with open(args.dictionary) as f:
     dict = f.read().splitlines()
 dict_set = set(dict)
 
@@ -62,9 +62,9 @@ if args.magic:
 if args.output:
     squares = sorted(list(final))
     with open(args.output, "w") as f:
-        if args.save_format == "json":
+        if args.output.ends_with(".json"):
             json.dump(squares, f)
-        elif args.save_format == "txt":
+        elif args.output.ends_with(".txt"):
             print_square(squares[0], f)
             for s in squares[1:]:
                 print(file=f)

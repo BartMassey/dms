@@ -4,6 +4,12 @@ Bart Massey 2025
 Construct all five-letter-by-five-letter word squares from a
 given dictionary under various constraints.
 
+(*Note:* Jim Blandy quickly constructed a much faster solver
+the night after I gave a talk about this. It is a clever
+approach using prefix tries rather than state-space
+search. [He is clearly smarter than I am.]
+<https://github.com/jimblandy/jimb-ws5>)
+
 ## Fancy Word Squares
 
 Here is an example of a 5×5 canonical double [word

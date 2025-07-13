@@ -135,3 +135,18 @@ https://github.com/BartMassey/ws5
 
 * Rust "functional programming" is a thing. Iterators
   are key to performance.
+
+## Epilogue
+
+I got my code to run in one minute on my laptop. I was
+pretty proud of it, and gave a talk to the PDX Rust Meetup a
+few hours later.
+
+During the talk Jim Blandy thought up a better algorithm,
+and quickly constructed a solver
+the night after I gave a talk about this. It is a clever
+approach using prefix tries rather than state-space
+search. (He is clearly smarter than I am.)
+
+Jim's implementation runs in 4 seconds on my
+desktop. <https://github.com/jimblandy/jimb-ws5>
